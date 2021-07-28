@@ -33,16 +33,16 @@ import java.util.Optional;
 public class WishListService {
 
     private WishlistRepository wishlistRepository;
-    private WishlistProductRepository wishlistProductRepository;
     private ProductRepository productRepository;
     private ClientRepository clientRepository;
+    private WishListProductService wishListProductService;
 
     @Autowired
-    public WishListService(WishlistRepository wishlistRepository, WishlistProductRepository wishlistProductRepository, ProductRepository productRepository, ClientRepository clientRepository) {
+    public WishListService(WishlistRepository wishlistRepository,  ProductRepository productRepository, ClientRepository clientRepository, WishListProductService wishListProductService) {
         this.wishlistRepository = wishlistRepository;
-        this.wishlistProductRepository = wishlistProductRepository;
         this.productRepository = productRepository;
         this.clientRepository = clientRepository;
+        this.wishListProductService = wishListProductService;
     }
 
     private WishlistProduct processWishlist(WishlistDTO wishlistDTO) {
@@ -94,25 +94,9 @@ public class WishListService {
 
         return null;
     }
-    private WishlistProduct getWishlistProduct(Long productId, Wishlist wishlist){
-        try {
-            Optional<WishlistProduct> wishlistProduct = wishlistProductRepository.findByProductIdAndWishIdAndQuantityGreaterThan(productId, wishlist.getId(), 0l);
-            if(wishlistProduct.isPresent()){
-                return wishlistProduct.get();
-            }
-        }catch (BusinessRunTimeException e){
-            String messageComplment = "";
-            if(wishlist.getClient() != null){
-                messageComplment = "\n Cliente: " + wishlist.getClient().getId();
-            }
-            messageComplment += "\n Produto: " + productId;
-            throw new BusinessRunTimeException(Translator.toLocale(MessageError.MSG_WISHLISTDETAIL_FINDFAIL.getMensagem()) + messageComplment , e);
-        }
-        return null;
-    }
 
     private WishlistProduct proccessProductsWishlist(Long productId, Long quantity, Wishlist wishlist){
-        WishlistProduct wishlistProduct = getWishlistProduct(productId, wishlist);
+        WishlistProduct wishlistProduct = wishListProductService.getWishlistProduct(productId, wishlist);
 
         Long clientId = wishlist.getClient().getId();
         if(wishlistProduct == null){
@@ -132,11 +116,12 @@ public class WishListService {
             wishlistProduct.setQuantity(quantity);
             wishlistProduct.setDateTimeAlter(LocalDateTime.now());
         }
-        return wishlistProductRepository.save(wishlistProduct);
+        return wishListProductService.saveWishlistProduct(wishlistProduct);
     }
     public WishlistProduct saveWishlist(WishlistDTO wishlistDTO){
          return processWishlist(wishlistDTO);
     }
+
     public void saveWishlist(List<WishlistDTO> listWishlistDTO){
         listWishlistDTO.forEach(wishlistDTO -> {
            saveWishlist(wishlistDTO);
@@ -145,7 +130,7 @@ public class WishListService {
 
     public List<ProductResponseData> findWishlist(Long clientId){
         Wishlist wishlist = getWishlist(clientId);
-        List<WishlistProduct> wishlistProducts = wishlistProductRepository.findByWishId(wishlist.getId());
+        List<WishlistProduct> wishlistProducts = wishListProductService.getWishlistProducts(wishlist.getId());
         List<ProductResponseData> products = new ArrayList<>();
 
         for (WishlistProduct wishlistProduct:wishlistProducts) {
@@ -183,7 +168,7 @@ public class WishListService {
         if(wishlist == null){
             throw new BusinessRunTimeException(Translator.toLocale(MessageError.MSG_WISHLIST_DELETE_NOTFOUND.getMensagem()) + "\n Cliente: " + wishlistDeleteProductDTO.getClient());
         }
-        WishlistProduct wishlistProduct = getWishlistProduct(wishlistDeleteProductDTO.getProduct(), wishlist);
+        WishlistProduct wishlistProduct = wishListProductService.getWishlistProduct(wishlistDeleteProductDTO.getProduct(), wishlist);
 
         if(wishlistProduct == null){
             throw new BusinessRunTimeException(Translator.toLocale(MessageError.MSG_WISHLISTPRODUCT_DELETE_NOTFOUND.getMensagem())
@@ -197,7 +182,7 @@ public class WishListService {
         * no carrinho de compras para análise de dados
         * e tomadas de decisões futuras
         * */
-        wishlistProductRepository.save(wishlistProduct);
+        wishListProductService.saveWishlistProduct(wishlistProduct);
     }
 
 }
