@@ -33,15 +33,15 @@ import java.util.Optional;
 public class WishListService {
 
     private WishlistRepository wishlistRepository;
-    private ProductRepository productRepository;
-    private ClientRepository clientRepository;
+    private ProductService productService;
+    private ClientService clientService;
     private WishListProductService wishListProductService;
 
     @Autowired
-    public WishListService(WishlistRepository wishlistRepository,  ProductRepository productRepository, ClientRepository clientRepository, WishListProductService wishListProductService) {
+    public WishListService(WishlistRepository wishlistRepository,  ProductService productService, ClientService clientService, WishListProductService wishListProductService) {
         this.wishlistRepository = wishlistRepository;
-        this.productRepository = productRepository;
-        this.clientRepository = clientRepository;
+        this.productService = productService;
+        this.clientService = clientService;
         this.wishListProductService = wishListProductService;
     }
 
@@ -49,7 +49,7 @@ public class WishListService {
       Wishlist wishlist = getWishlist(wishlistDTO.getClient());
       if(wishlist == null){
           wishlist = Wishlist.builder()
-                  .client(getClient(wishlistDTO.getClient()))
+                  .client(clientService.getClient(wishlistDTO.getClient()))
                   .status(StatusWishlist.ATIVO)
                   .dateTimeAlter(LocalDateTime.now())
                   .build();
@@ -70,37 +70,14 @@ public class WishListService {
         return null;
     }
 
-    private Product getProduct(Long id_product){
-        try {
-            Optional<Product> product = productRepository.findById(id_product);
-            if(product.isPresent()){
-                return product.get();
-            }
-        }catch (BusinessRunTimeException e){
-            throw new BusinessRunTimeException(Translator.toLocale(MessageError.MSG_PRODUCT_FINDFAIL.getMensagem()) + "\n Produto: " + id_product, e);
-        }
-       return null;
-    }
 
-    private Client getClient(Long id_client){
-        try {
-            Optional<Client> client = clientRepository.findById(id_client);
-            if(client.isPresent()){
-                return client.get();
-            }
-        }catch (BusinessRunTimeException e){
-            throw new BusinessRunTimeException(Translator.toLocale(MessageError.MSG_CLIENT_FINDFAIL.getMensagem()) + "\n Cliente: " + id_client, e);
-        }
-
-        return null;
-    }
 
     private WishlistProduct proccessProductsWishlist(Long productId, Long quantity, Wishlist wishlist){
         WishlistProduct wishlistProduct = wishListProductService.getWishlistProduct(productId, wishlist);
 
         Long clientId = wishlist.getClient().getId();
         if(wishlistProduct == null){
-            if(getProduct(productId) == null){
+            if(productService.getProduct(productId) == null){
                 throw new BusinessRunTimeException(Translator.toLocale(MessageError.MSG_PRODUCT_NOTFOUND.getMensagem()) + " Produto: " + productId);
             }
             if(clientId == null){
@@ -137,7 +114,7 @@ public class WishListService {
             if(wishlistProduct.getQuantity() <= 0){
                 continue;
             }
-            Product product = getProduct(wishlistProduct.getProductId());
+            Product product = productService.getProduct(wishlistProduct.getProductId());
             float total = product.getPrice() * wishlistProduct.getQuantity();
             ProductResponseData productResponseData = ProductResponseData.builder()
                     .product(product)

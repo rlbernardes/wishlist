@@ -22,14 +22,10 @@ import java.util.Optional;
 @NoArgsConstructor
 public class WishListProductService {
     private WishlistProductRepository wishlistProductRepository;
-    private ProductRepository productRepository;
-    private ClientRepository clientRepository;
 
     @Autowired
-    public WishListProductService( WishlistProductRepository wishlistProductRepository, ProductRepository productRepository, ClientRepository clientRepository) {
+    public WishListProductService( WishlistProductRepository wishlistProductRepository) {
         this.wishlistProductRepository = wishlistProductRepository;
-        this.productRepository = productRepository;
-        this.clientRepository = clientRepository;
     }
 
     public WishlistProduct getWishlistProduct(Long productId, Wishlist wishlist){

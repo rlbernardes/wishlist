@@ -8,9 +8,9 @@ import br.com.loja.wishlist.entity.Wishlist;
 import br.com.loja.wishlist.entity.WishlistProduct;
 import br.com.loja.wishlist.entity.enums.StatusWishlist;
 import br.com.loja.wishlist.repository.ClientRepository;
-import br.com.loja.wishlist.repository.ProductRepository;
-import br.com.loja.wishlist.repository.WishlistProductRepository;
 import br.com.loja.wishlist.repository.WishlistRepository;
+import br.com.loja.wishlist.service.ProductService;
+import br.com.loja.wishlist.service.WishListProductService;
 import br.com.loja.wishlist.service.WishListService;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -32,13 +32,13 @@ public class WishlistServiceTest {
     WishlistRepository wishlistRepository;
 
     @Mock
-    WishlistProductRepository wishlistProductRepository;
+    WishListProductService wishListProductService;
 
     @Mock
     ClientRepository clientRepository;
 
     @Mock
-    ProductRepository productRepository;
+    ProductService productService;
 
     @InjectMocks
     WishListService wishListService;
@@ -54,11 +54,11 @@ public class WishlistServiceTest {
 
         when(wishlistRepository.findByClientIdAndStatus(1l, StatusWishlist.ATIVO)).thenReturn(wishlist);
 
-        when(wishlistProductRepository.findByProductIdAndWishIdAndQuantityGreaterThan(1l, 1l,0l)).thenReturn(wishlistProductOptional);
+        when(wishListProductService.getWishlistProduct(1l, wishlist.get())).thenReturn(wishlistProductOptional.get());
 
         when(clientRepository.findById(1l)).thenReturn(client);
 
-        when(wishlistProductRepository.save(any(WishlistProduct.class))).thenReturn(new WishlistProduct());
+        when(wishListProductService.saveWishlistProduct(any(WishlistProduct.class))).thenReturn(new WishlistProduct());
 
         when(wishListService.saveWishlist(wishlistDTO)).thenReturn(wishlistProduct);
 
@@ -78,14 +78,19 @@ public class WishlistServiceTest {
         Optional<Product> product = Optional.ofNullable(dadosTeste.creatProduct());
         List<ProductResponseData> productResponseDataList = dadosTeste.createProductsResponse();
         List<WishlistProduct> wishlistProducts = new ArrayList<>();
+        Optional<WishlistProduct> wishlistProductOptional = Optional.ofNullable(dadosTeste.creatWishlistProduct());
         wishlistProducts.add(wishlistProduct);
         when(wishlistRepository.findByClientIdAndStatus(1l, StatusWishlist.ATIVO)).thenReturn(wishlist);
 
-        when(wishlistProductRepository.findByWishId(1l)).thenReturn(wishlistProducts);
+        when(wishListProductService.getWishlistProducts(1l)).thenReturn(wishlistProducts);
 
-        when(productRepository.findById(1l)).thenReturn(product);
+        when(productService.getProduct(1l)).thenReturn(product.get());
 
         when(wishListService.saveWishlist(wishlistDTO)).thenReturn(wishlistProduct);
+
+        when(wishListProductService.getWishlistProduct(1l, wishlist.get())).thenReturn(wishlistProductOptional.get());
+
+
 
         List<ProductResponseData> responseDataList = wishListService.findWishlist(1l);
 
@@ -114,7 +119,7 @@ public class WishlistServiceTest {
 
         when(wishlistRepository.findByClientIdAndStatus(1l, StatusWishlist.ATIVO)).thenReturn(wishlist);
 
-        when(wishlistProductRepository.findByProductIdAndWishIdAndQuantityGreaterThan(1l, 1l,0l)).thenReturn(wishlistProductOptional);
+        when(wishListProductService.getWishlistProduct(1l, wishlist.get())).thenReturn(wishlistProductOptional.get());
 
         wishListService.deleteWishlistProduct(dadosTeste.createWishlistDeleteProductDTO());
 
