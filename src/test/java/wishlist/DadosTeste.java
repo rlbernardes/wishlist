@@ -1,4 +1,4 @@
-package br.com.loja.wishlist.controller;
+package wishlist;
 
 import br.com.loja.wishlist.dto.ProductResponseData;
 import br.com.loja.wishlist.dto.WishlistDTO;
